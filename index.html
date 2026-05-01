@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NZ Natural Hazard Claims Explorer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-title">
+      <h1>NZ Natural Hazard Claims Explorer</h1>
+      <p class="header-sub">Projected climate change exposure &middot; IAG Aotearoa portfolio &middot; Excludes earthquake</p>
+    </div>
+    <div class="scenario-selector" role="group" aria-label="Select climate scenario">
+      <button class="scenario-btn active" data-scenario="ssp126">
+        <span class="scenario-label">SSP1-2.6</span>
+        <span class="scenario-temp">~1.5°C</span>
+      </button>
+      <button class="scenario-btn" data-scenario="ssp245">
+        <span class="scenario-label">SSP2-4.5</span>
+        <span class="scenario-temp">~2.5°C</span>
+      </button>
+      <button class="scenario-btn" data-scenario="ssp585">
+        <span class="scenario-label">SSP5-8.5</span>
+        <span class="scenario-temp">~4°C+</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="scenario-context" id="scenario-context"></div>
+
+  <section class="kpi-strip" aria-label="Key indicators">
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-increase">+34%</div>
+      <div class="kpi-label">Projected claims increase by 2050</div>
+      <div class="kpi-sub">vs 2024 baseline &middot; climate-sensitive perils</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-peril">Flood</div>
+      <div class="kpi-label">Highest-impact peril</div>
+      <div class="kpi-sub">by projected 2050 cost</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-region">West Coast</div>
+      <div class="kpi-label">Highest-risk region by 2050</div>
+      <div class="kpi-sub" id="kpi-region-sub">highest rainfall — projected intensification of westerlies</div>
+    </div>
+  </section>
+
+  <main class="dashboard-grid">
+
+    <div class="chart-card" id="card-timeline">
+      <div class="chart-card-header">
+        <h2>Claims Timeline</h2>
+        <span class="badge">2010–2070</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-timeline"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card" id="card-peril">
+      <div class="chart-card-header">
+        <h2>Peril Composition</h2>
+        <div class="toggle-group" role="group" aria-label="View mode">
+          <button class="toggle-btn active" data-mode="cost">Cost share</button>
+          <button class="toggle-btn" data-mode="count">Event count</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-peril"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card map-card" id="card-map">
+      <div class="chart-card-header">
+        <h2>Regional Risk Index</h2>
+        <span class="badge" id="map-year-label">2050</span>
+      </div>
+      <div id="map" class="map-container"></div>
+    </div>
+
+    <div class="sidebar" id="region-sidebar">
+      <h2>Region Detail</h2>
+      <p class="sidebar-hint">Click a region on the map to explore its peril breakdown.</p>
+    </div>
+
+  </main>
+
+  <footer class="methodology">
+    <strong>Data &amp; methodology</strong> &mdash;
+    Claims index: 2024 baseline&nbsp;=&nbsp;100; excludes earthquake.
+    Historical baseline anchored to ICNZ published NZ natural hazard aggregate loss statistics.
+    Regional and peril breakdowns are modelled estimates calibrated to ICNZ loss totals and
+    NIWA Hazardscape event frequency data. Future projections apply IPCC AR6 WG2 Ch11
+    (Australasia) climate multipliers per SSP warming scenario.
+    Figures are indicative and intended for scenario planning purposes, not pricing.
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="script.js"></script>
+</body>
+</html>
