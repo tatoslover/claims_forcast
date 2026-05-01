@@ -34,6 +34,7 @@ function updateAll() {
   updateTimelineChart();
   updatePerilChart();
   updateMap();
+  updateComparisonTable();
 }
 
 // ── Scenario context blurb ────────────────────────────────────────────────
@@ -448,6 +449,45 @@ function renderSidebar(region) {
       <span class="risk-value">${futureRisk}</span>
     </div>
     <div class="peril-list">${perilRows}</div>`;
+}
+
+// ── Scenario comparison table ─────────────────────────────────────────────
+const MILESTONE_YEARS = [2030, 2040, 2050, 2070];
+
+function updateComparisonTable() {
+  const rows = Object.values(SCENARIOS).map(sc => {
+    const isActive = sc.id === activeScenario;
+    const cells = MILESTONE_YEARS.map(year => {
+      const val = PROJECTIONS[sc.id][year - 2025];
+      const delta = val - 100;
+      return `<td class="comp-cell">
+        <span class="comp-index">${val}</span>
+        <span class="comp-delta">+${delta}%</span>
+      </td>`;
+    }).join("");
+
+    return `<tr class="comp-row${isActive ? " comp-row-active" : ""}"
+        ${isActive ? `style="border-left-color:${sc.color};background:${sc.colorBg}"` : ""}>
+      <td class="comp-scenario">
+        <span class="comp-label" style="color:${sc.color}">${sc.label}</span>
+        <span class="comp-warming">${sc.warming}</span>
+      </td>
+      ${cells}
+    </tr>`;
+  }).join("");
+
+  document.getElementById("comparison-table-wrap").innerHTML = `
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th class="comp-th-scenario">Scenario</th>
+          ${MILESTONE_YEARS.map(y => `<th class="comp-th-year">${y}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="comp-note">Shaded row = active scenario. Use these milestone figures for stress-testing reserve adequacy and pricing assumptions.</p>
+  `;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────

@@ -439,6 +439,101 @@ body {
 
 .map-tooltip::before { display: none !important; }
 
+/* ── Scenario comparison table ───────────────────────────────────────────── */
+.comparison-section {
+  padding: 0 32px;
+  margin-bottom: 16px;
+}
+
+.comparison-card {
+  overflow: visible;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.comparison-table thead th {
+  text-align: right;
+  padding: 8px 16px 8px 0;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+
+.comp-th-scenario {
+  text-align: left !important;
+  width: 220px;
+}
+
+.comp-th-year { min-width: 90px; }
+
+.comp-row {
+  border-left: 3px solid transparent;
+  transition: background var(--trans), border-color var(--trans);
+}
+
+.comp-row-active {
+  border-radius: 4px;
+}
+
+.comp-row td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.comp-row:last-child td { border-bottom: none; }
+
+.comp-scenario {
+  padding-left: 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comp-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.comp-warming {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.comp-cell {
+  text-align: right;
+  vertical-align: middle;
+}
+
+.comp-index {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.comp-delta {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.comp-note {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
 /* ── Methodology footer ──────────────────────────────────────────────────── */
 .methodology {
   margin: 20px 32px 32px;
@@ -455,12 +550,13 @@ body {
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
-  .site-header     { padding: 16px; flex-direction: column; align-items: flex-start; }
-  .scenario-context { margin: 12px 16px; }
-  .kpi-strip       { grid-template-columns: 1fr; padding: 0 16px 16px; }
-  .dashboard-grid  { grid-template-columns: 1fr; grid-template-rows: auto; padding: 0 16px; }
-  .map-card        { min-height: 320px; }
-  .methodology     { margin: 16px 16px 24px; }
+  .site-header        { padding: 16px; flex-direction: column; align-items: flex-start; }
+  .scenario-context   { margin: 12px 16px; }
+  .kpi-strip          { grid-template-columns: 1fr; padding: 0 16px 16px; }
+  .dashboard-grid     { grid-template-columns: 1fr; grid-template-rows: auto; padding: 0 16px; }
+  .map-card           { min-height: 320px; }
+  .comparison-section { padding: 0 16px; overflow-x: auto; }
+  .methodology        { margin: 16px 16px 24px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
