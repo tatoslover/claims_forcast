@@ -73,12 +73,19 @@
       <div class="chart-wrap">
         <canvas id="chart-peril"></canvas>
       </div>
+      <div id="peril-filters" class="peril-filters"></div>
     </div>
 
     <div class="chart-card map-card" id="card-map">
       <div class="chart-card-header">
         <h2>Regional Risk Index</h2>
-        <span class="badge" id="map-year-label">2050</span>
+        <div class="map-legend">
+          <span class="legend-item" style="--c:#84cc16">Low</span>
+          <span class="legend-item" style="--c:#eab308"></span>
+          <span class="legend-item" style="--c:#f59e0b"></span>
+          <span class="legend-item" style="--c:#f97316"></span>
+          <span class="legend-item" style="--c:#ef4444">High</span>
+        </div>
       </div>
       <div id="map" class="map-container"></div>
     </div>

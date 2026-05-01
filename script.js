@@ -1,8 +1,11 @@
 // ── State ─────────────────────────────────────────────────────────────────
 let activeScenario = "ssp126";
-let perilMode = "cost";
-let timelineChart = null;
-let perilChart = null;
+let perilMode      = "cost";
+let activePerils   = new Set(Object.keys(PERILS));
+let timelineChart  = null;
+let perilChart     = null;
+let leafletMap     = null;
+let geojsonLayer   = null;
 
 // ── Scenario switcher ─────────────────────────────────────────────────────
 document.querySelectorAll(".scenario-btn").forEach(btn => {
@@ -224,7 +227,7 @@ function buildPerilBarDatasets() {
     ...projected,
   ];
 
-  return Object.entries(PERILS).map(([key, meta]) => ({
+  return Object.entries(PERILS).filter(([key]) => activePerils.has(key)).map(([key, meta]) => ({
     label: meta.label,
     data: rows.map(r => r ? r[key] : null),
     backgroundColor: meta.color + "cc",
@@ -310,9 +313,98 @@ function updatePerilChart() {
   }
 }
 
-// ── Map (Sprint 3) ────────────────────────────────────────────────────────
+// ── Peril filter ──────────────────────────────────────────────────────────
+function buildPerilFilters() {
+  const container = document.getElementById("peril-filters");
+  if (!container) return;
+  container.innerHTML = Object.entries(PERILS).map(([key, meta]) => `
+    <label class="peril-filter-label">
+      <input type="checkbox" class="peril-checkbox" data-peril="${key}" checked>
+      <span class="peril-filter-dot" style="background:${meta.color}"></span>
+      ${meta.label}
+    </label>
+  `).join("");
+
+  container.querySelectorAll(".peril-checkbox").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if (cb.checked) activePerils.add(cb.dataset.peril);
+      else activePerils.delete(cb.dataset.peril);
+      updatePerilChart();
+      updateTimelineChart();
+    });
+  });
+}
+
+// ── Map ───────────────────────────────────────────────────────────────────
+function riskColor(score) {
+  if (score >= 88) return "#ef4444";
+  if (score >= 78) return "#f97316";
+  if (score >= 68) return "#f59e0b";
+  if (score >= 58) return "#eab308";
+  return "#84cc16";
+}
+
+function regionStyle(feature) {
+  const region = REGIONS.find(r => r.id === feature.properties.id);
+  const score  = region ? region.risk2050[activeScenario] : 40;
+  return {
+    fillColor:   riskColor(score),
+    fillOpacity: 0.65,
+    color:       "#1e2130",
+    weight:      1.5,
+  };
+}
+
+function onEachFeature(feature, layer) {
+  const region = REGIONS.find(r => r.id === feature.properties.id);
+  if (!region) return;
+
+  layer.on({
+    mouseover(e) {
+      e.target.setStyle({ fillOpacity: 0.85, weight: 2.5, color: "#e2e8f0" });
+      e.target.bringToFront();
+    },
+    mouseout(e) {
+      geojsonLayer.resetStyle(e.target);
+    },
+    click() {
+      renderSidebar(region);
+    },
+  });
+
+  const score = region.risk2050[activeScenario];
+  const maoriLine = region.maori ? `<span style="color:#94a3b8;font-style:italic"> ${region.maori}</span><br>` : "";
+  layer.bindTooltip(
+    `<strong>${region.name}</strong><br>${maoriLine}2050 risk index: ${score}`,
+    { sticky: true, className: "map-tooltip" }
+  );
+}
+
 function updateMap() {
-  // Choropleth implementation in Sprint 3.
+  if (!leafletMap) {
+    leafletMap = L.map("map", {
+      center: [-41.5, 173.5],
+      zoom: 5,
+      zoomControl: true,
+      attributionControl: false,
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+      maxZoom: 10,
+    }).addTo(leafletMap);
+
+    fetch("nz-regions.geojson")
+      .then(r => r.json())
+      .then(data => {
+        geojsonLayer = L.geoJSON(data, {
+          style: regionStyle,
+          onEachFeature,
+        }).addTo(leafletMap);
+        leafletMap.fitBounds(geojsonLayer.getBounds(), { padding: [16, 16], maxZoom: 7 });
+      });
+  } else if (geojsonLayer) {
+    geojsonLayer.setStyle(regionStyle);
+  }
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -339,6 +431,7 @@ function renderSidebar(region) {
   document.getElementById("region-sidebar").innerHTML = `
     <h2>Region Detail</h2>
     <p class="sidebar-region-name">${region.name}</p>
+    ${region.maori ? `<p class="sidebar-region-maori">${region.maori}</p>` : ""}
     <p class="sidebar-note">${region.note}</p>
     <div class="sidebar-risk">
       <span class="risk-label">Now</span>
@@ -358,4 +451,5 @@ function renderSidebar(region) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
+buildPerilFilters();
 updateAll();

@@ -111,7 +111,7 @@ const KPIS = {
 // perilBreakdown: percentage share of claims by peril (sums to 100).
 const REGIONS = [
   {
-    id: "northland", name: "Northland",
+    id: "northland", name: "Northland", maori: "Te Tai Tokerau",
     currentRisk: 52,
     risk2050: { ssp126: 60, ssp245: 70, ssp585: 82 },
     topPeril: "Storm",
@@ -119,7 +119,7 @@ const REGIONS = [
     note: "Exposed to tropical cyclones and storm surge as sea surface temperatures rise.",
   },
   {
-    id: "auckland", name: "Auckland",
+    id: "auckland", name: "Auckland", maori: "Tāmaki Makaurau",
     currentRisk: 65,
     risk2050: { ssp126: 72, ssp245: 80, ssp585: 89 },
     topPeril: "Flood",
@@ -135,7 +135,7 @@ const REGIONS = [
     note: "Waikato River catchment poses significant flood exposure across the region.",
   },
   {
-    id: "bay-of-plenty", name: "Bay of Plenty",
+    id: "bay-of-plenty", name: "Bay of Plenty", maori: "Te Moana-a-Toi",
     currentRisk: 55,
     risk2050: { ssp126: 62, ssp245: 72, ssp585: 83 },
     topPeril: "Flood",
@@ -143,7 +143,7 @@ const REGIONS = [
     note: "Coastal and catchment flooding risk increases with tropical storm intensity.",
   },
   {
-    id: "gisborne", name: "Gisborne / Tairāwhiti",
+    id: "gisborne", name: "Gisborne", maori: "Tairāwhiti",
     currentRisk: 68,
     risk2050: { ssp126: 76, ssp245: 84, ssp585: 92 },
     topPeril: "Flood",
@@ -151,7 +151,7 @@ const REGIONS = [
     note: "Steep terrain and vulnerable river systems make Tairāwhiti among the most exposed regions.",
   },
   {
-    id: "hawkes-bay", name: "Hawke's Bay",
+    id: "hawkes-bay", name: "Hawke's Bay", maori: "Te Matau-a-Māui",
     currentRisk: 72,
     risk2050: { ssp126: 80, ssp245: 90, ssp585: 95 },
     topPeril: "Flood",
@@ -175,7 +175,7 @@ const REGIONS = [
     note: "The Manawatū River has a documented history of significant flooding events.",
   },
   {
-    id: "wellington", name: "Wellington",
+    id: "wellington", name: "Wellington", maori: "Te Whanganui-a-Tara",
     currentRisk: 60,
     risk2050: { ssp126: 66, ssp245: 73, ssp585: 82 },
     topPeril: "Storm",
@@ -191,7 +191,7 @@ const REGIONS = [
     note: "The 2019 Nelson-Tasman wildfires signalled growing fire risk under hotter, drier summers.",
   },
   {
-    id: "nelson", name: "Nelson",
+    id: "nelson", name: "Nelson", maori: "Whakatū",
     currentRisk: 50,
     risk2050: { ssp126: 57, ssp245: 66, ssp585: 76 },
     topPeril: "Wildfire",
@@ -207,7 +207,7 @@ const REGIONS = [
     note: "Wairau and Awatere river systems carry flash flood risk during intense rainfall events.",
   },
   {
-    id: "west-coast", name: "West Coast",
+    id: "west-coast", name: "West Coast", maori: "Te Tai Poutini",
     currentRisk: 75,
     risk2050: { ssp126: 82, ssp245: 88, ssp585: 94 },
     topPeril: "Flood",
@@ -215,7 +215,7 @@ const REGIONS = [
     note: "Already NZ's highest-rainfall region. Projected intensification of westerly rainfall makes this the highest-risk region under SSP1-2.6.",
   },
   {
-    id: "canterbury", name: "Canterbury",
+    id: "canterbury", name: "Canterbury", maori: "Waitaha",
     currentRisk: 62,
     risk2050: { ssp126: 68, ssp245: 76, ssp585: 86 },
     topPeril: "Flood",
@@ -223,7 +223,7 @@ const REGIONS = [
     note: "Alpine river systems (Waimakariri, Rakaia) and the Canterbury Plains present major flood exposure; drought risk is also growing.",
   },
   {
-    id: "otago", name: "Otago",
+    id: "otago", name: "Otago", maori: "Ōtākou",
     currentRisk: 58,
     risk2050: { ssp126: 65, ssp245: 74, ssp585: 84 },
     topPeril: "Flood",
@@ -231,7 +231,7 @@ const REGIONS = [
     note: "Mackenzie Basin wildfire risk is growing alongside flood exposure from the Clutha and Waitaki systems.",
   },
   {
-    id: "southland", name: "Southland",
+    id: "southland", name: "Southland", maori: "Murihiku",
     currentRisk: 50,
     risk2050: { ssp126: 56, ssp245: 64, ssp585: 74 },
     topPeril: "Flood",
