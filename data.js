@@ -248,3 +248,67 @@ const PERILS = {
   landslide: { label: "Landslide", color: "#84cc16" },
   drought:   { label: "Drought",   color: "#eab308" },
 };
+
+// ── Peril bar data ────────────────────────────────────────────────────────
+// Stacked bar chart: historical snapshots + projected milestones by scenario.
+// Cost values: claims index points per peril (must sum to total for that year).
+// Count values: approximate annual event frequency (grows slower than cost,
+//   demonstrating that severity per event is also increasing — good talking point).
+
+const PERIL_BARS = {
+  // Labels: "" acts as a visual spacer between historical and projected sections
+  labels: ["2015", "2020", "2024", "", "2030", "2040", "2050", "2070"],
+
+  cost: {
+    historical: [
+      { flood: 35, storm: 26, wildfire:  6, landslide:  7, drought:  4 }, // 2015 total=78
+      { flood: 38, storm: 29, wildfire:  9, landslide:  7, drought:  3 }, // 2020 total=86
+      { flood: 45, storm: 30, wildfire: 10, landslide:  8, drought:  7 }, // 2024 total=100
+    ],
+    ssp126: [
+      { flood: 48, storm: 31, wildfire: 13, landslide: 10, drought:  8 }, // 2030 total=110
+      { flood: 54, storm: 33, wildfire: 16, landslide: 11, drought:  8 }, // 2040 total=122
+      { flood: 61, storm: 35, wildfire: 20, landslide: 11, drought:  7 }, // 2050 total=134
+      { flood: 68, storm: 38, wildfire: 23, landslide: 12, drought:  7 }, // 2070 total=148
+    ],
+    ssp245: [
+      { flood: 52, storm: 32, wildfire: 16, landslide: 11, drought:  7 }, // 2030 total=118
+      { flood: 64, storm: 36, wildfire: 22, landslide: 12, drought:  6 }, // 2040 total=140
+      { flood: 78, storm: 42, wildfire: 30, landslide: 12, drought:  5 }, // 2050 total=167
+      { flood: 95, storm: 49, wildfire: 37, landslide: 12, drought:  5 }, // 2070 total=198
+    ],
+    ssp585: [
+      { flood:  57, storm: 34, wildfire:  22, landslide: 11, drought: 4 }, // 2030 total=128
+      { flood:  78, storm: 42, wildfire:  34, landslide: 11, drought: 3 }, // 2040 total=168
+      { flood: 106, storm: 53, wildfire:  46, landslide: 13, drought: 3 }, // 2050 total=221
+      { flood: 142, storm: 67, wildfire:  63, landslide: 15, drought: 3 }, // 2070 total=290
+    ],
+  },
+
+  // Event counts — frequency grows more slowly than cost (severity is also rising)
+  count: {
+    historical: [
+      { flood: 45, storm: 62, wildfire:  8, landslide: 18, drought:  5 }, // 2015
+      { flood: 52, storm: 65, wildfire: 12, landslide: 20, drought:  6 }, // 2020
+      { flood: 58, storm: 68, wildfire: 14, landslide: 22, drought:  9 }, // 2024
+    ],
+    ssp126: [
+      { flood: 61, storm: 70, wildfire: 16, landslide: 23, drought: 10 }, // 2030
+      { flood: 65, storm: 72, wildfire: 20, landslide: 24, drought: 11 }, // 2040
+      { flood: 70, storm: 74, wildfire: 24, landslide: 25, drought: 12 }, // 2050
+      { flood: 75, storm: 76, wildfire: 28, landslide: 26, drought: 13 }, // 2070
+    ],
+    ssp245: [
+      { flood: 64, storm: 71, wildfire: 18, landslide: 24, drought: 10 }, // 2030
+      { flood: 70, storm: 74, wildfire: 24, landslide: 26, drought: 12 }, // 2040
+      { flood: 78, storm: 77, wildfire: 30, landslide: 28, drought: 14 }, // 2050
+      { flood: 90, storm: 82, wildfire: 38, landslide: 31, drought: 16 }, // 2070
+    ],
+    ssp585: [
+      { flood:  67, storm: 73, wildfire: 22, landslide: 25, drought: 10 }, // 2030
+      { flood:  77, storm: 78, wildfire: 30, landslide: 27, drought: 12 }, // 2040
+      { flood:  90, storm: 83, wildfire: 40, landslide: 30, drought: 13 }, // 2050
+      { flood: 110, storm: 90, wildfire: 56, landslide: 34, drought: 14 }, // 2070
+    ],
+  },
+};

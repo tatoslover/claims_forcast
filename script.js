@@ -47,12 +47,10 @@ function updateScenarioContext() {
 function updateKPIs() {
   const kpi = KPIS[activeScenario];
   const s   = SCENARIOS[activeScenario];
-
   animateKPI("kpi-increase", `+${kpi.increase2050}%`);
   animateKPI("kpi-peril",    kpi.topPeril);
   animateKPI("kpi-region",   kpi.topRegion);
   document.getElementById("kpi-region-sub").textContent = kpi.topRegionContext;
-
   document.querySelectorAll(".kpi-card").forEach(card => {
     card.style.borderColor = s.color;
   });
@@ -66,158 +64,260 @@ function animateKPI(id, value) {
   el.classList.add("animating");
 }
 
+// ── "Now" line plugin ─────────────────────────────────────────────────────
+const nowLinePlugin = {
+  id: "nowLine",
+  afterDraw(chart) {
+    if (!chart.config.options._showNowLine) return;
+    const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+    const xPos = x.getPixelForValue(2024);
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(xPos, top);
+    ctx.lineTo(xPos, bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Now", xPos + 5, top + 14);
+    ctx.restore();
+  },
+};
+Chart.register(nowLinePlugin);
+
 // ── Timeline chart ────────────────────────────────────────────────────────
-function updateTimelineChart() {
-  const s = SCENARIOS[activeScenario];
+// Shows historical (solid grey) + all three scenario projections simultaneously.
+// Active scenario: full colour + fill. Inactive: muted, thin, no fill.
+function buildTimelineDatasets() {
+  const ALL_YEARS = [...HISTORICAL.years, ...PROJECTION_YEARS];
 
-  const allYears = [...HISTORICAL.years, ...PROJECTIONS.years];
-  const historicalPad = new Array(PROJECTIONS.years.length).fill(null);
-  const projectionPad = new Array(HISTORICAL.years.length).fill(null);
+  const historicalDataset = {
+    label: "Historical",
+    data: ALL_YEARS.map(y => {
+      const i = HISTORICAL.years.indexOf(y);
+      return i !== -1 ? HISTORICAL.total[i] : null;
+    }),
+    borderColor: "#94a3b8",
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    pointRadius: ALL_YEARS.map(y => y === 2023 ? 5 : 0),
+    pointHoverRadius: ALL_YEARS.map(y => y === 2023 ? 7 : 4),
+    pointBackgroundColor: ALL_YEARS.map(y => y === 2023 ? "#ef4444" : "#94a3b8"),
+    tension: 0.3,
+    fill: false,
+    order: 0,
+  };
 
-  const datasets = [
-    {
-      label: "Historical",
-      data: [...HISTORICAL.total, ...historicalPad],
-      borderColor: "#94a3b8",
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      pointRadius: 2,
-      pointHoverRadius: 4,
-      tension: 0.3,
-      order: 0,
-    },
-    {
+  const scenarioDatasets = Object.values(SCENARIOS).map(s => {
+    const isActive = s.id === activeScenario;
+    return {
       label: s.label,
-      data: [...projectionPad, ...PROJECTIONS[activeScenario]],
-      borderColor: s.color,
-      backgroundColor: s.colorBg,
-      borderWidth: 2.5,
-      fill: true,
+      _scenarioId: s.id,
+      data: ALL_YEARS.map(y => {
+        if (y === 2024) return 100; // bridge point
+        const i = PROJECTION_YEARS.indexOf(y);
+        return i !== -1 ? PROJECTIONS[s.id][i] : null;
+      }),
+      borderColor: isActive ? s.color : s.color + "44",
+      backgroundColor: isActive ? s.colorBg : "transparent",
+      borderWidth: isActive ? 2.5 : 1,
       pointRadius: 0,
       pointHoverRadius: 4,
       tension: 0.4,
-      order: 1,
-    },
-  ];
+      fill: isActive ? "origin" : false,
+      order: isActive ? 1 : 2,
+    };
+  });
 
-  const config = {
-    type: "line",
-    data: { labels: allYears, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: {
-          labels: { color: "#94a3b8", font: { size: 11 }, boxWidth: 14 },
-        },
-        tooltip: {
-          backgroundColor: "#1e2130",
-          borderColor: "#334155",
-          borderWidth: 1,
-          titleColor: "#e2e8f0",
-          bodyColor: "#94a3b8",
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y ?? "—"} (index)`,
-          },
-        },
+  return { labels: ALL_YEARS, datasets: [historicalDataset, ...scenarioDatasets] };
+}
+
+function updateTimelineChart() {
+  const { labels, datasets } = buildTimelineDatasets();
+
+  const tooltipConfig = {
+    backgroundColor: "#1e2130",
+    borderColor: "#334155",
+    borderWidth: 1,
+    titleColor: "#e2e8f0",
+    bodyColor: "#94a3b8",
+    callbacks: {
+      title: items => {
+        const year = items[0].label;
+        return year === "2023" ? `${year} — Cyclone Gabrielle + Auckland floods` : String(year);
       },
-      scales: {
-        x: {
-          ticks: {
-            color: "#475569",
-            font: { size: 10 },
-            maxTicksLimit: 13,
-          },
-          grid: { color: "rgba(255,255,255,0.04)" },
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Claims index (2024 = 100)",
-            color: "#475569",
-            font: { size: 10 },
-          },
-          ticks: { color: "#475569", font: { size: 10 } },
-          grid:  { color: "rgba(255,255,255,0.04)" },
-        },
+      label: ctx => {
+        const v = ctx.parsed.y;
+        if (v == null) return null;
+        return ` ${ctx.dataset.label}: ${v} (index)`;
       },
     },
   };
 
   if (timelineChart) {
-    timelineChart.data.datasets[1].data        = [...projectionPad, ...PROJECTIONS[activeScenario]];
-    timelineChart.data.datasets[1].borderColor = s.color;
-    timelineChart.data.datasets[1].backgroundColor = s.colorBg;
-    timelineChart.data.datasets[1].label       = s.label;
-    timelineChart.options.plugins.legend.labels.color = "#94a3b8";
+    // Update scenario dataset styles without destroying the chart
+    timelineChart.data.datasets.forEach(ds => {
+      if (!ds._scenarioId) return;
+      const s = SCENARIOS[ds._scenarioId];
+      const isActive = ds._scenarioId === activeScenario;
+      ds.borderColor       = isActive ? s.color : s.color + "44";
+      ds.backgroundColor   = isActive ? s.colorBg : "transparent";
+      ds.borderWidth       = isActive ? 2.5 : 1;
+      ds.fill              = isActive ? "origin" : false;
+      ds.order             = isActive ? 1 : 2;
+    });
     timelineChart.update("active");
   } else {
     const ctx = document.getElementById("chart-timeline").getContext("2d");
-    timelineChart = new Chart(ctx, config);
+    timelineChart = new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        _showNowLine: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            labels: { color: "#64748b", font: { size: 11 }, boxWidth: 14, padding: 12 },
+          },
+          tooltip: tooltipConfig,
+        },
+        scales: {
+          x: {
+            ticks: { color: "#475569", font: { size: 10 }, maxTicksLimit: 13 },
+            grid:  { color: "rgba(255,255,255,0.04)" },
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Claims index (2024 = 100)",
+              color: "#475569",
+              font: { size: 10 },
+            },
+            ticks: { color: "#475569", font: { size: 10 } },
+            grid:  { color: "rgba(255,255,255,0.04)" },
+            min: 0,
+          },
+        },
+      },
+    });
   }
 }
 
 // ── Peril composition chart ───────────────────────────────────────────────
-function updatePerilChart() {
-  // For Sprint 2 we'll add scenario-projected peril shift.
-  // For now, show historical 2024 baseline peril breakdown as a doughnut.
-  const labels = Object.values(PERILS).map(p => p.label);
-  const colors = Object.values(PERILS).map(p => p.color);
-  const data2024 = Object.keys(PERILS).map(k => HISTORICAL.byPeril[k].at(-1));
+// Stacked bar: historical snapshots (2015, 2020, 2024) + projected milestones
+// under the active scenario (2030, 2040, 2050, 2070). Visual spacer between them.
+// Toggle: cost index vs event count — counts grow slower, showing severity increase.
+function buildPerilBarDatasets() {
+  const modeData = PERIL_BARS[perilMode];
+  const projected = modeData[activeScenario];
 
-  const config = {
-    type: "doughnut",
-    data: {
-      labels,
-      datasets: [{
-        data: data2024,
-        backgroundColor: colors.map(c => c + "cc"),
-        borderColor: colors,
-        borderWidth: 1.5,
-        hoverOffset: 8,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "right",
-          labels: { color: "#94a3b8", font: { size: 11 }, boxWidth: 12, padding: 12 },
+  // 8 bars: 3 historical + spacer + 4 projected
+  const rows = [
+    ...modeData.historical,
+    null, // spacer
+    ...projected,
+  ];
+
+  return Object.entries(PERILS).map(([key, meta]) => ({
+    label: meta.label,
+    data: rows.map(r => r ? r[key] : null),
+    backgroundColor: meta.color + "cc",
+    borderColor: meta.color,
+    borderWidth: 1,
+    borderRadius: 3,
+    hoverBackgroundColor: meta.color,
+  }));
+}
+
+function updatePerilChart() {
+  const datasets = buildPerilBarDatasets();
+  const yLabel = perilMode === "cost"
+    ? "Claims index (2024 = 100)"
+    : "Annual event count";
+
+  if (perilChart) {
+    perilChart.data.datasets.forEach((ds, i) => {
+      ds.data = datasets[i].data;
+      ds.backgroundColor = datasets[i].backgroundColor;
+      ds.borderColor     = datasets[i].borderColor;
+    });
+    perilChart.options.scales.y.title.text = yLabel;
+    perilChart.update("active");
+  } else {
+    const ctx = document.getElementById("chart-peril").getContext("2d");
+    perilChart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: PERIL_BARS.labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            labels: { color: "#64748b", font: { size: 11 }, boxWidth: 12, padding: 10 },
+          },
+          tooltip: {
+            backgroundColor: "#1e2130",
+            borderColor: "#334155",
+            borderWidth: 1,
+            titleColor: "#e2e8f0",
+            bodyColor: "#94a3b8",
+            callbacks: {
+              title: items => {
+                const label = items[0].label;
+                if (!label) return "—";
+                const isProjected = ["2030","2040","2050","2070"].includes(label);
+                return isProjected
+                  ? `${label} — ${SCENARIOS[activeScenario].label} projection`
+                  : `${label} — historical`;
+              },
+              label: ctx => {
+                const v = ctx.parsed.y;
+                if (v == null) return null;
+                const unit = perilMode === "cost" ? " (index)" : " events";
+                return ` ${ctx.dataset.label}: ${v}${unit}`;
+              },
+            },
+          },
         },
-        tooltip: {
-          backgroundColor: "#1e2130",
-          borderColor: "#334155",
-          borderWidth: 1,
-          titleColor: "#e2e8f0",
-          bodyColor: "#94a3b8",
-          callbacks: {
-            label: ctx => ` ${ctx.label}: ${ctx.parsed}% of claims`,
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: "#475569", font: { size: 10 } },
+            grid: { display: false },
+          },
+          y: {
+            stacked: true,
+            title: {
+              display: true,
+              text: yLabel,
+              color: "#475569",
+              font: { size: 10 },
+            },
+            ticks: { color: "#475569", font: { size: 10 } },
+            grid: { color: "rgba(255,255,255,0.04)" },
+            min: 0,
           },
         },
       },
-      cutout: "62%",
-    },
-  };
-
-  if (perilChart) {
-    perilChart.update();
-  } else {
-    const ctx = document.getElementById("chart-peril").getContext("2d");
-    perilChart = new Chart(ctx, config);
+    });
   }
 }
 
-// ── Map (Leaflet — placeholder, Sprint 3) ────────────────────────────────
+// ── Map (Sprint 3) ────────────────────────────────────────────────────────
 function updateMap() {
-  // Map initialisation and choropleth will be implemented in Sprint 3.
-  // Region GeoJSON: Stats NZ regional council boundaries (simplified).
+  // Choropleth implementation in Sprint 3.
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
 function renderSidebar(region) {
-  const s = SCENARIOS[activeScenario];
+  const s           = SCENARIOS[activeScenario];
   const currentRisk = region.currentRisk;
   const futureRisk  = region.risk2050[activeScenario];
 
@@ -240,7 +340,6 @@ function renderSidebar(region) {
     <h2>Region Detail</h2>
     <p class="sidebar-region-name">${region.name}</p>
     <p class="sidebar-note">${region.note}</p>
-
     <div class="sidebar-risk">
       <span class="risk-label">Now</span>
       <div class="risk-bar-wrap">
@@ -255,7 +354,6 @@ function renderSidebar(region) {
       </div>
       <span class="risk-value">${futureRisk}</span>
     </div>
-
     <div class="peril-list">${perilRows}</div>`;
 }
 
