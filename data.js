@@ -32,7 +32,7 @@ const SCENARIOS = {
     label:   "SSP5-8.5",
     warming: "~4°C+ by 2100",
     narrative: "High-emission scenario — business as usual. Significant physical risk materialisation.",
-    blurb:   "Under high emissions, weather-peril claims more than double by 2050. Significant repricing, tighter underwriting in exposed regions, and higher reinsurance costs are likely. Some floodplain and coastal areas may approach the limits of insurability.",
+    blurb:   "Claims more than double by 2050 (+121%) and approach triple the 2024 baseline by 2070. Reinsurance costs rise materially; tighter underwriting in flood-exposed regions becomes necessary within the decade. Some coastal and floodplain areas may approach the limits of insurability within the policy horizon.",
     color:   "#ef4444",
     colorBg: "rgba(239,68,68,0.12)",
   },

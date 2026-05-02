@@ -548,6 +548,19 @@ body {
 
 .methodology strong { color: var(--text-sec); }
 
+.methodology-attribution {
+  float: right;
+  margin-left: 24px;
+}
+
+.methodology-attribution a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--trans);
+}
+
+.methodology-attribution a:hover { color: var(--text-sec); }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
   .site-header        { padding: 16px; flex-direction: column; align-items: flex-start; }

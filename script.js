@@ -91,7 +91,48 @@ const nowLinePlugin = {
     ctx.restore();
   },
 };
-Chart.register(nowLinePlugin);
+// ── 2023 event annotation plugin ──────────────────────────────────────────
+const eventAnnotationPlugin = {
+  id: "eventAnnotation",
+  afterDraw(chart) {
+    if (!chart.config.options._showNowLine) return;
+    const { ctx, chartArea: { top }, scales: { x, y } } = chart;
+    const xPos = x.getPixelForValue(2023);
+    const yPos = y.getPixelForValue(190);
+
+    ctx.save();
+
+    // Leader line from spike upward
+    const lx = xPos + 10;
+    const ly = yPos - 32;
+    ctx.strokeStyle = "rgba(239,68,68,0.55)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(xPos, yPos - 7);
+    ctx.lineTo(lx, ly + 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label background
+    ctx.font = "bold 9.5px -apple-system, BlinkMacSystemFont, sans-serif";
+    const line1 = "Cyclone Gabrielle";
+    const line2 = "+ Auckland floods";
+    const w = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width);
+    ctx.fillStyle = "rgba(20, 22, 38, 0.88)";
+    ctx.fillRect(lx - 2, ly - 14, w + 10, 28);
+
+    // Label text
+    ctx.fillStyle = "#ef4444";
+    ctx.textAlign = "left";
+    ctx.fillText(line1, lx + 3, ly - 2);
+    ctx.fillText(line2, lx + 3, ly + 11);
+
+    ctx.restore();
+  },
+};
+
+Chart.register(nowLinePlugin, eventAnnotationPlugin);
 
 // ── Timeline chart ────────────────────────────────────────────────────────
 // Shows historical (solid grey) + all three scenario projections simultaneously.
@@ -384,8 +425,8 @@ function onEachFeature(feature, layer) {
 function updateMap() {
   if (!leafletMap) {
     leafletMap = L.map("map", {
-      center: [-41.5, 173.5],
-      zoom: 5,
+      center: [-41.5, 172.5],
+      zoom: 6,
       zoomControl: true,
       attributionControl: false,
     });
@@ -401,7 +442,8 @@ function updateMap() {
           style: regionStyle,
           onEachFeature,
         }).addTo(leafletMap);
-        leafletMap.fitBounds(geojsonLayer.getBounds(), { padding: [16, 16], maxZoom: 7 });
+        leafletMap.invalidateSize();
+        leafletMap.fitBounds(geojsonLayer.getBounds(), { padding: [8, 8], maxZoom: 6 });
       });
   } else if (geojsonLayer) {
     geojsonLayer.setStyle(regionStyle);
