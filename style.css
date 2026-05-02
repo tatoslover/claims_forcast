@@ -79,6 +79,11 @@ body {
   transition: background var(--trans), border-color var(--trans), color var(--trans);
 }
 
+/* Faint severity tint on inactive buttons */
+.scenario-btn[data-scenario="ssp126"] { border-color: rgba(16,185,129,0.3); }
+.scenario-btn[data-scenario="ssp245"] { border-color: rgba(245,158,11,0.3); }
+.scenario-btn[data-scenario="ssp585"] { border-color: rgba(239,68,68,0.3); }
+
 .scenario-btn:hover {
   background: var(--surface-hi);
   color: var(--text);
@@ -87,8 +92,11 @@ body {
 .scenario-label { font-size: 0.85rem; font-weight: 600; }
 .scenario-temp  { font-size: 0.70rem; }
 
-/* Active state colours set via JS inline style on border-color + background */
-.scenario-btn.active { color: var(--text); }
+/* Active state — clear selection with scenario colour */
+.scenario-btn.active                          { color: var(--text); }
+.scenario-btn[data-scenario="ssp126"].active  { background: rgba(16,185,129,0.15); border-color: var(--c-126); }
+.scenario-btn[data-scenario="ssp245"].active  { background: rgba(245,158,11,0.15); border-color: var(--c-245); }
+.scenario-btn[data-scenario="ssp585"].active  { background: rgba(239,68,68,0.15);  border-color: var(--c-585); }
 
 /* ── Scenario context blurb ──────────────────────────────────────────────── */
 .scenario-context {
@@ -109,6 +117,12 @@ body {
   font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.ctx-narrative {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .ctx-blurb {
@@ -402,6 +416,25 @@ body {
   opacity: 0.4;
 }
 
+.peril-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.70rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--trans), border-color var(--trans);
+}
+
+.peril-reset-btn:hover {
+  color: var(--text-sec);
+  border-color: rgba(255,255,255,0.18);
+}
+
 /* ── Map legend ──────────────────────────────────────────────────────────── */
 .map-legend {
   display: flex;
@@ -435,6 +468,7 @@ body {
   font-size: 0.75rem !important;
   padding: 6px 10px !important;
   box-shadow: none !important;
+  z-index: 1000 !important;
 }
 
 .map-tooltip::before { display: none !important; }
@@ -548,18 +582,34 @@ body {
 
 .methodology strong { color: var(--text-sec); }
 
-.methodology-attribution {
-  float: right;
-  margin-left: 24px;
+.methodology-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.methodology-attribution a {
+.limitations-list {
+  margin: 6px 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.methodology-footer-row {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.methodology-footer-row a {
   color: var(--text-muted);
   text-decoration: none;
   transition: color var(--trans);
 }
 
-.methodology-attribution a:hover { color: var(--text-sec); }
+.methodology-footer-row a:hover { color: var(--text-sec); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
@@ -570,6 +620,7 @@ body {
   .map-card           { min-height: 320px; }
   .comparison-section { padding: 0 16px; overflow-x: auto; }
   .methodology        { margin: 16px 16px 24px; }
+  .methodology-body   { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

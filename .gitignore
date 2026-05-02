@@ -1,4 +1,7 @@
 iag.md
 plan.md
-candidate-information.pdf
 talking_points.md
+
+# Confidential documents
+*.pdf
+*.docx

@@ -45,6 +45,7 @@ function updateScenarioContext() {
   el.style.borderColor = s.color;
   el.innerHTML =
     `<span class="ctx-label" style="color:${s.color}">${s.label} &mdash; ${s.warming}</span>` +
+    `<span class="ctx-narrative">${s.narrative}</span>` +
     `<span class="ctx-blurb">${s.blurb}</span>`;
 }
 
@@ -260,19 +261,31 @@ function updateTimelineChart() {
 // under the active scenario (2030, 2040, 2050, 2070). Visual spacer between them.
 // Toggle: cost index vs event count — counts grow slower, showing severity increase.
 function buildPerilBarDatasets() {
-  const modeData = PERIL_BARS[perilMode];
+  const srcMode = perilMode === "mix" ? "cost" : perilMode;
+  const modeData = PERIL_BARS[srcMode];
   const projected = modeData[activeScenario];
 
   // 8 bars: 3 historical + spacer + 4 projected
   const rows = [
     ...modeData.historical,
-    null, // spacer
+    null,
     ...projected,
   ];
 
+  const activeKeys = Object.keys(PERILS).filter(k => activePerils.has(k));
+
+  const normalised = rows.map(r => {
+    if (!r || perilMode !== "mix") return r;
+    const total = activeKeys.reduce((s, k) => s + (r[k] ?? 0), 0);
+    if (!total) return r;
+    const out = {};
+    activeKeys.forEach(k => { out[k] = Math.round((r[k] / total) * 1000) / 10; });
+    return out;
+  });
+
   return Object.entries(PERILS).filter(([key]) => activePerils.has(key)).map(([key, meta]) => ({
     label: meta.label,
-    data: rows.map(r => r ? r[key] : null),
+    data: normalised.map(r => r ? r[key] : null),
     backgroundColor: meta.color + "cc",
     borderColor: meta.color,
     borderWidth: 1,
@@ -283,13 +296,14 @@ function buildPerilBarDatasets() {
 
 function updatePerilChart() {
   const datasets = buildPerilBarDatasets();
-  const yLabel = perilMode === "cost"
-    ? "Claims index (2024 = 100)"
-    : "Annual event count";
+  const yLabel = perilMode === "cost" ? "Claims index (2024 = 100)"
+              : perilMode === "count" ? "Annual event count"
+              : "Share of claims (%)";
 
   if (perilChart) {
     perilChart.data.datasets = datasets;
     perilChart.options.scales.y.title.text = yLabel;
+    perilChart.options.scales.y.max = perilMode === "mix" ? 100 : 320;
     perilChart.update("active");
   } else {
     const ctx = document.getElementById("chart-peril").getContext("2d");
@@ -301,9 +315,7 @@ function updatePerilChart() {
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            labels: { color: "#64748b", font: { size: 11 }, boxWidth: 12, padding: 10 },
-          },
+          legend: { display: false },
           tooltip: {
             backgroundColor: "#1e2130",
             borderColor: "#334155",
@@ -322,7 +334,7 @@ function updatePerilChart() {
               label: ctx => {
                 const v = ctx.parsed.y;
                 if (v == null) return null;
-                const unit = perilMode === "cost" ? " (index)" : " events";
+                const unit = perilMode === "cost" ? " (index)" : perilMode === "count" ? " events" : "%";
                 return ` ${ctx.dataset.label}: ${v}${unit}`;
               },
             },
@@ -345,6 +357,7 @@ function updatePerilChart() {
             ticks: { color: "#475569", font: { size: 10 } },
             grid: { color: "rgba(255,255,255,0.04)" },
             min: 0,
+            max: 320,
           },
         },
       },
@@ -362,15 +375,31 @@ function buildPerilFilters() {
       <span class="peril-filter-dot" style="background:${meta.color}"></span>
       ${meta.label}
     </label>
-  `).join("");
+  `).join("") + `<button class="peril-reset-btn" id="peril-reset" style="display:none">Reset</button>`;
+
+  const resetBtn = container.querySelector("#peril-reset");
+
+  function syncResetVisibility() {
+    const allChecked = activePerils.size === Object.keys(PERILS).length;
+    resetBtn.style.display = allChecked ? "none" : "inline-flex";
+  }
 
   container.querySelectorAll(".peril-checkbox").forEach(cb => {
     cb.addEventListener("change", () => {
       if (cb.checked) activePerils.add(cb.dataset.peril);
       else activePerils.delete(cb.dataset.peril);
+      syncResetVisibility();
       updatePerilChart();
       updateTimelineChart();
     });
+  });
+
+  resetBtn.addEventListener("click", () => {
+    activePerils = new Set(Object.keys(PERILS));
+    container.querySelectorAll(".peril-checkbox").forEach(cb => { cb.checked = true; });
+    syncResetVisibility();
+    updatePerilChart();
+    updateTimelineChart();
   });
 }
 
@@ -434,7 +463,10 @@ function updateMap() {
     }).addTo(leafletMap);
 
     fetch("nz-regions.geojson")
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
         geojsonLayer = L.geoJSON(data, {
           style: regionStyle,
@@ -442,6 +474,13 @@ function updateMap() {
         }).addTo(leafletMap);
         leafletMap.invalidateSize();
         leafletMap.fitBounds(geojsonLayer.getBounds(), { padding: [8, 8], maxZoom: 6 });
+      })
+      .catch(err => {
+        console.error("Failed to load region map:", err);
+        const el = document.getElementById("map");
+        if (el) el.insertAdjacentHTML("beforeend",
+          `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.85rem;pointer-events:none">Map unavailable — region data could not be loaded</div>`
+        );
       });
   } else if (geojsonLayer) {
     geojsonLayer.setStyle(regionStyle);
@@ -466,14 +505,16 @@ function renderSidebar(region) {
     .sort((a, b) => b[1] - a[1])
     .map(([key, pct]) => {
       const p = PERILS[key];
+      const barWidth  = Math.max(pct, pct > 0 ? 1 : 0);
+      const pctLabel  = pct > 0 && pct < 1 ? "< 1%" : `${pct}%`;
       return `
         <div class="peril-row">
           <span class="peril-dot" style="background:${p.color}"></span>
           <span class="peril-name">${p.label}</span>
           <div class="peril-bar-wrap">
-            <div class="peril-bar" style="width:${pct}%;background:${p.color}"></div>
+            <div class="peril-bar" style="width:${barWidth}%;background:${p.color}"></div>
           </div>
-          <span class="peril-pct">${pct}%</span>
+          <span class="peril-pct">${pctLabel}</span>
         </div>`;
     }).join("");
 
@@ -483,7 +524,7 @@ function renderSidebar(region) {
     ${region.maori ? `<p class="sidebar-region-maori">${region.maori}</p>` : ""}
     <p class="sidebar-note">${region.note}</p>
     <div class="sidebar-risk">
-      <span class="risk-label">Now</span>
+      <span class="risk-label">2024 baseline</span>
       <div class="risk-bar-wrap">
         <div class="risk-bar" style="width:${currentRisk}%;background:#64748b"></div>
       </div>

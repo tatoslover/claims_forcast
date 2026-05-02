@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NZ Natural Hazard Claims Explorer</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
@@ -68,6 +69,7 @@
         <div class="toggle-group" role="group" aria-label="View mode">
           <button class="toggle-btn active" data-mode="cost">Cost share</button>
           <button class="toggle-btn" data-mode="count">Event count</button>
+          <button class="toggle-btn" data-mode="mix">% Mix</button>
         </div>
       </div>
       <div class="chart-wrap">
@@ -108,14 +110,30 @@
   </section>
 
   <footer class="methodology">
-    <strong>Data &amp; methodology</strong> &mdash;
-    Claims index: 2024 baseline&nbsp;=&nbsp;100; excludes earthquake.
-    Historical baseline anchored to ICNZ published NZ natural hazard aggregate loss statistics.
-    Regional and peril breakdowns are modelled estimates calibrated to ICNZ loss totals and
-    NIWA Hazardscape event frequency data. Future projections apply IPCC AR6 WG2 Ch11
-    (Australasia) climate multipliers per SSP warming scenario.
-    Figures are indicative and intended for scenario planning purposes, not pricing.
-    <span class="methodology-attribution">Built by <a href="https://github.com/tatoslover" target="_blank" rel="noopener">Samuel Love</a></span>
+    <div class="methodology-body">
+      <div class="methodology-col">
+        <strong>Data &amp; methodology.</strong>
+        Claims index: 2024 baseline&nbsp;=&nbsp;100; excludes earthquake.
+        Historical baseline drawn from ICNZ published NZ natural hazard aggregate loss statistics.
+        Regional and peril breakdowns are modelled estimates calibrated to ICNZ loss totals and
+        NIWA Hazardscape event frequency data. Future projections use IPCC AR6 WG2 Ch11
+        (Australasia) climate multipliers for each SSP warming scenario.
+        All figures are indicative and for scenario planning only.
+      </div>
+      <div class="methodology-col">
+        <strong>Limitations</strong>
+        <ul class="limitations-list">
+          <li>Data is synthetic, built from ICNZ and NIWA public figures. Not actuarially certified; for scenario planning only, not pricing or reserving.</li>
+          <li>Regional breakdowns are modelled, not actual loss data. Sub-regional concentration risk isn't captured.</li>
+          <li>SSP projections have wide uncertainty ranges not shown here. The gap between scenarios is about structural uncertainty, not precision around a single path.</li>
+          <li>Earthquake is excluded throughout. Adding it would increase total exposure considerably, especially in Canterbury and Wellington.</li>
+          <li>No allowance for portfolio growth or inflation. Assumes the 2024 insured base stays fixed to 2070, which it won't.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="methodology-footer-row">
+      Built by <a href="https://github.com/tatoslover" target="_blank" rel="noopener">Samuel Love</a>
+    </div>
   </footer>
 
   <script src="data.js"></script>
