@@ -1,11 +1,12 @@
 // ── State ─────────────────────────────────────────────────────────────────
-let activeScenario = "ssp126";
-let perilMode      = "cost";
-let activePerils   = new Set(Object.keys(PERILS));
-let timelineChart  = null;
-let perilChart     = null;
-let leafletMap     = null;
-let geojsonLayer   = null;
+let activeScenario  = "ssp126";
+let perilMode       = "cost";
+let activePerils    = new Set(Object.keys(PERILS));
+let timelineChart   = null;
+let perilChart      = null;
+let leafletMap      = null;
+let geojsonLayer    = null;
+let selectedRegion  = null;
 
 // ── Scenario switcher ─────────────────────────────────────────────────────
 document.querySelectorAll(".scenario-btn").forEach(btn => {
@@ -287,11 +288,7 @@ function updatePerilChart() {
     : "Annual event count";
 
   if (perilChart) {
-    perilChart.data.datasets.forEach((ds, i) => {
-      ds.data = datasets[i].data;
-      ds.backgroundColor = datasets[i].backgroundColor;
-      ds.borderColor     = datasets[i].borderColor;
-    });
+    perilChart.data.datasets = datasets;
     perilChart.options.scales.y.title.text = yLabel;
     perilChart.update("active");
   } else {
@@ -410,6 +407,7 @@ function onEachFeature(feature, layer) {
       geojsonLayer.resetStyle(e.target);
     },
     click() {
+      selectedRegion = region;
       renderSidebar(region);
     },
   });
@@ -447,6 +445,14 @@ function updateMap() {
       });
   } else if (geojsonLayer) {
     geojsonLayer.setStyle(regionStyle);
+    geojsonLayer.eachLayer(layer => {
+      const region = REGIONS.find(r => r.id === layer.feature?.properties?.id);
+      if (!region) return;
+      const score = region.risk2050[activeScenario];
+      const maoriLine = region.maori ? `<span style="color:#94a3b8;font-style:italic"> ${region.maori}</span><br>` : "";
+      layer.setTooltipContent(`<strong>${region.name}</strong><br>${maoriLine}2050 risk index: ${score}`);
+    });
+    if (selectedRegion) renderSidebar(selectedRegion);
   }
 }
 
